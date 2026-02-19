@@ -1,0 +1,46 @@
+[
+  {
+    "type": "Personal",
+    "description": "Flexible loans for personal needs.",
+    "max_amount": 500000,
+    "interest_rate": 10.5,
+    "tenure_years": 5,
+    "min_age": 21,
+    "max_age": 60,
+    "min_income": 25000,
+    "min_cibil": 700
+  },
+  {
+    "type": "Home",
+    "description": "Loans for buying or constructing a home.",
+    "max_amount": 5000000,
+    "interest_rate": 8.5,
+    "tenure_years": 30,
+    "min_age": 21,
+    "max_age": 65,
+    "min_income": 40000,
+    "min_cibil": 750
+  },
+  {
+    "type": "Business",
+    "description": "Loans to scale your business operations.",
+    "max_amount": 10000000,
+    "interest_rate": 12.0,
+    "tenure_years": 10,
+    "min_age": 25,
+    "max_age": 65,
+    "min_income": 100000,
+    "min_cibil": 720
+  },
+  {
+    "type": "Education",
+    "description": "Financial support for higher education.",
+    "max_amount": 2000000,
+    "interest_rate": 9.0,
+    "tenure_years": 15,
+    "min_age": 18,
+    "max_age": 35,
+    "min_income": 20000,
+    "min_cibil": 650
+  }
+]
