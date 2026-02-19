@@ -6,7 +6,7 @@ A production-ready FastAPI backend for a loan assistance service.
 - **Loan Information**: Detailed list of available loans (Personal, Home, Business, Education).
 - **Eligibility Evaluation**: Automated check based on age, income, CIBIL, etc.
 - **EMI Calculator**: Standard financial formula implementation.
-- **Rule-based Chatbot**: Keyword matching NLP for quick assistance.
+- **Groq AI Chatbot**: Context-aware assistance powered by Llama 3 via Groq API.
 - **Structured Logging & Error Handling**.
 
 ## Setup Instructions

@@ -1,45 +1,56 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2, Sparkles, PlusCircle } from 'lucide-react';
+import { Send, User, Bot, Loader2, Sparkles, CornerDownLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatWithBot } from '../api';
 
+const quickPrompts = [
+    { label: 'Loan Types', text: 'What types of loans are available?' },
+    { label: 'Check Eligibility', text: 'How do I check my loan eligibility?' },
+    { label: 'Calculate EMI', text: 'Help me calculate my EMI.' },
+    { label: 'Interest Rates', text: 'What are the current interest rates?' },
+];
+
 const ChatSection = () => {
     const [messages, setMessages] = useState([
-        { id: 1, text: "Hello! I'm your AI Loan Assistant. How can I facilitate your financial journey today?", sender: 'bot', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        {
+            id: 1,
+            text: "Hello! I'm your AI Loan Assistant. How can I facilitate your financial journey today?",
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [sessionId, setSessionId] = useState(null);
     const scrollRef = useRef(null);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSend = async (e) => {
-        e.preventDefault();
-        if (!input.trim() || isLoading) return;
+    const sendMessage = async (text) => {
+        const trimmed = text.trim();
+        if (!trimmed || isLoading) return;
 
         const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const userMsg = { id: Date.now(), text: input, sender: 'user', timestamp };
-        setMessages(prev => [...prev, userMsg]);
+        setMessages(prev => [...prev, { id: Date.now(), text: trimmed, sender: 'user', timestamp }]);
         setInput('');
         setIsLoading(true);
 
         try {
-            const data = await chatWithBot(input, sessionId);
+            const data = await chatWithBot(trimmed, sessionId);
             if (data.session_id && !sessionId) setSessionId(data.session_id);
-
             setMessages(prev => [...prev, {
                 id: Date.now() + 1,
                 text: data.reply,
                 sender: 'bot',
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
-        } catch (error) {
+        } catch {
             setMessages(prev => [...prev, {
                 id: Date.now() + 1,
-                text: "System communication error. Please ensure the neural gateway (backend) is active.",
+                text: "Unable to connect to the server. Please ensure the backend is running.",
                 sender: 'bot',
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
@@ -48,45 +59,88 @@ const ChatSection = () => {
         }
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        sendMessage(input);
+    };
+
     return (
-        <div className="flex flex-col h-full max-w-4xl mx-auto">
-            {/* Banner / Info */}
-            <div className="mb-6 flex items-center justify-between px-4 py-3 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl">
+        <div className="flex flex-col h-full max-w-3xl mx-auto" style={{ height: 'calc(100vh - 130px)' }}>
+
+            {/* Assistant Header Card */}
+            <div className="mb-5 flex items-center justify-between px-5 py-3.5 rounded-2xl"
+                style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-500/20 rounded-lg">
-                        <Sparkles className="text-indigo-400 w-4 h-4" />
+                    <div className="relative">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ background: 'var(--ink)' }}>
+                            <Bot className="w-5 h-5" style={{ color: 'var(--amber-light)' }} />
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
+                            style={{ background: 'var(--sage)' }} />
                     </div>
-                    <p className="text-xs font-semibold text-indigo-100">AI Personalization Enabled</p>
+                    <div>
+                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>
+                            LoanBot Pro Assistant
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-1 h-1 rounded-full" style={{ background: 'var(--sage)' }} />
+                            <span style={{ color: 'var(--sage)', fontSize: '0.68rem', fontWeight: 500 }}>Online · Ready to help</span>
+                        </div>
+                    </div>
                 </div>
-                <button className="text-[10px] uppercase tracking-widest font-bold text-indigo-400 hover:text-indigo-300">View Data Policy</button>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                    style={{ background: 'var(--amber-pale)', border: '1px solid rgba(200,135,44,0.2)' }}>
+                    <Sparkles className="w-3 h-3" style={{ color: 'var(--amber)' }} />
+                    <span style={{ color: 'var(--amber-dark)', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        AI Powered
+                    </span>
+                </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto space-y-5 pb-4 pr-1">
                 <AnimatePresence initial={false}>
                     {messages.map((msg) => (
                         <motion.div
                             key={msg.id}
-                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
                             className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                            <div className={`max-w-[80%] flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} gap-1`}>
-                                <div className={`flex items-end gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`shrink-0 p-2 rounded-xl h-10 w-10 flex items-center justify-center ${msg.sender === 'user' ? 'bg-indigo-600/20 text-indigo-400' : 'bg-slate-800 text-slate-400'
-                                        } border border-white/5`}>
-                                        {msg.sender === 'user' ? <User size={18} /> : <Bot size={18} />}
-                                    </div>
-                                    <div className={`relative p-4 shadow-xl ${msg.sender === 'user'
-                                            ? 'bg-indigo-600 text-white rounded-2xl rounded-br-none'
-                                            : 'bg-slate-900/80 border border-white/10 text-slate-100 rounded-2xl rounded-bl-none'
-                                        }`}>
-                                        <p className="text-sm font-medium leading-relaxed">{msg.text}</p>
-                                    </div>
+                            <div className={`flex items-end gap-2.5 max-w-[78%] ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+
+                                {/* Avatar */}
+                                <div className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mb-4"
+                                    style={{
+                                        background: msg.sender === 'bot' ? 'var(--ink)' : 'var(--amber-pale)',
+                                        border: '1px solid var(--border)'
+                                    }}>
+                                    {msg.sender === 'bot'
+                                        ? <Bot className="w-3.5 h-3.5" style={{ color: 'var(--amber-light)' }} />
+                                        : <User className="w-3.5 h-3.5" style={{ color: 'var(--amber-dark)' }} />
+                                    }
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1 px-12">
-                                    {msg.timestamp}
-                                </span>
+
+                                <div className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} gap-1`}>
+                                    <div className="px-4 py-3 rounded-2xl"
+                                        style={{
+                                            background: msg.sender === 'user' ? 'var(--ink)' : 'white',
+                                            color: msg.sender === 'user' ? 'var(--cream)' : 'var(--ink)',
+                                            border: msg.sender === 'bot' ? '1px solid var(--border)' : 'none',
+                                            borderRadius: msg.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                            fontSize: '0.875rem',
+                                            lineHeight: '1.6',
+                                            fontWeight: 400,
+                                        }}>
+                                        {msg.text}
+                                    </div>
+                                    <span style={{ fontSize: '0.62rem', color: 'var(--muted)', fontFamily: "'DM Mono', monospace" }}>
+                                        {msg.timestamp}
+                                    </span>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
@@ -94,45 +148,83 @@ const ChatSection = () => {
 
                 {isLoading && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                        <div className="bg-slate-900/60 border border-white/10 p-4 rounded-2xl rounded-bl-none text-slate-400 flex items-center gap-3">
-                            <Loader2 size={16} className="animate-spin text-indigo-500" />
-                            <span className="text-xs font-bold uppercase tracking-widest">Processing request...</span>
+                        <div className="flex items-center gap-2.5 ml-9">
+                            <div className="px-4 py-3 rounded-2xl flex items-center gap-2"
+                                style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '18px 18px 18px 4px' }}>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--amber)' }} />
+                                <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Thinking…</span>
+                            </div>
                         </div>
                     </motion.div>
                 )}
-                <div ref={scrollRef} className="h-4" />
+
+                <div ref={scrollRef} />
             </div>
 
-            {/* Fixed Input bar at the bottom */}
-            <div className="pt-6 pb-2 px-4">
-                <form onSubmit={handleSend} className="relative group">
-                    <div className="absolute inset-0 bg-indigo-500/10 blur-xl group-focus-within:bg-indigo-500/20 transition-all opacity-50" />
-                    <div className="relative bg-slate-900 border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-2xl focus-within:border-indigo-500/50 transition-all">
-                        <button type="button" className="p-2 text-slate-500 hover:text-white transition-colors">
-                            <PlusCircle size={20} />
+            {/* Quick prompts */}
+            {messages.length <= 2 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-wrap gap-2 mb-4">
+                    {quickPrompts.map((p) => (
+                        <button key={p.label} onClick={() => sendMessage(p.text)}
+                            className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                            style={{
+                                background: 'white',
+                                border: '1px solid var(--border)',
+                                color: 'var(--ink-soft)',
+                                fontSize: '0.75rem',
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.background = 'var(--amber-pale)';
+                                e.currentTarget.style.borderColor = 'var(--amber)';
+                                e.currentTarget.style.color = 'var(--amber-dark)';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.background = 'white';
+                                e.currentTarget.style.borderColor = 'var(--border)';
+                                e.currentTarget.style.color = 'var(--ink-soft)';
+                            }}>
+                            {p.label}
                         </button>
+                    ))}
+                </motion.div>
+            )}
+
+            {/* Input */}
+            <div className="shrink-0">
+                <form onSubmit={handleSubmit}>
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-2xl transition-all"
+                        style={{
+                            background: 'white',
+                            border: '1.5px solid var(--border)',
+                            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                        }}
+                        onFocus={() => { }}
+                    >
                         <input
+                            ref={inputRef}
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Query the LoanBot Pro Neural Network..."
-                            className="flex-1 bg-transparent border-none outline-none py-3 text-sm font-medium text-white placeholder:text-slate-600"
+                            placeholder="Ask about loans, eligibility, rates…"
+                            className="flex-1 bg-transparent outline-none border-none"
+                            style={{ color: 'var(--ink)', fontSize: '0.875rem', fontFamily: "'DM Sans', sans-serif" }}
                         />
-                        <button
-                            type="submit"
-                            disabled={!input.trim() || isLoading}
-                            className={`p-3 rounded-xl transition-all ${input.trim() && !isLoading
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 hover:scale-105 active:scale-95'
-                                    : 'bg-slate-800 text-slate-600'
-                                }`}
-                        >
-                            <Send size={18} className={isLoading ? 'animate-pulse' : ''} />
+                        <div style={{ color: 'var(--muted)', fontSize: '0.62rem', fontFamily: "'DM Mono', monospace" }} className="hidden sm:flex items-center gap-1 mr-2">
+                            <CornerDownLeft className="w-3 h-3" /> Send
+                        </div>
+                        <button type="submit" disabled={!input.trim() || isLoading}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                            style={{
+                                background: input.trim() && !isLoading ? 'var(--ink)' : 'var(--cream-mid)',
+                                color: input.trim() && !isLoading ? 'var(--amber-light)' : 'var(--muted)',
+                            }}>
+                            <Send className="w-3.5 h-3.5" />
                         </button>
                     </div>
                 </form>
-                <p className="text-[10px] text-center text-slate-600 mt-4 font-bold uppercase tracking-[0.2em]">
-                    Powered by LoanBot Pro Intelligence • Session Secured
-                </p>
+                <div className="text-center mt-3" style={{ color: 'var(--muted)', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    LoanBot Pro · Secure Session · AI Powered
+                </div>
             </div>
         </div>
     );

@@ -1,118 +1,171 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, Clock, Banknote, UserCheck, TrendingUp, ArrowUpRight, ShieldCheck, Zap, Landmark } from 'lucide-react';
+import { ArrowUpRight, Clock, Banknote, TrendingUp, Users, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getLoans } from '../api';
+
+const typeIcons = {
+    Personal: '◈',
+    Home: '⌂',
+    Business: '◆',
+    Education: '◉',
+};
+
+const typeColors = {
+    Personal: { bg: '#FFF5E8', border: 'rgba(200,135,44,0.25)', dot: 'var(--amber)' },
+    Home: { bg: '#EEF4EC', border: 'rgba(74,103,65,0.25)', dot: 'var(--sage)' },
+    Business: { bg: '#F0EEF5', border: 'rgba(80,65,120,0.25)', dot: '#6B5FA0' },
+    Education: { bg: '#EEF1F5', border: 'rgba(55,85,140,0.25)', dot: '#3755A0' },
+};
+
+const perks = {
+    Personal: ['No collateral required', 'Instant disbursal', 'Flexible repayment'],
+    Home: ['Tax benefits available', 'Lowest interest rates', 'Up to 30-year tenure'],
+    Business: ['Working capital support', 'Growth financing', 'Overdraft facility'],
+    Education: ['Moratorium period', 'No prepayment penalty', 'Abroad studies covered'],
+};
 
 const CatalogSection = () => {
     const [loans, setLoans] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selected, setSelected] = useState(null);
 
     useEffect(() => {
-        getLoans()
-            .then(setLoans)
-            .finally(() => setIsLoading(false));
+        getLoans().then(data => {
+            setLoans(data);
+            setIsLoading(false);
+        }).catch(() => setIsLoading(false));
     }, []);
 
     if (isLoading) {
         return (
-            <div className="h-full flex flex-col items-center justify-center space-y-4">
-                <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Syncing Asset Classes...</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <div className="w-8 h-8 border-2 rounded-full animate-spin"
+                    style={{ borderColor: 'var(--cream-mid)', borderTopColor: 'var(--amber)' }} />
+                <span style={{ fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Loading products…</span>
             </div>
         );
     }
 
     return (
-        <div className="space-y-10 max-w-6xl mx-auto">
-            {/* Legend / Status */}
-            <div className="flex flex-wrap items-center justify-between gap-6 px-8 py-6 bg-slate-900 border border-white/5 rounded-3xl shadow-xl">
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/50" />
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Market Rates</span>
+        <div className="max-w-5xl mx-auto space-y-7">
+
+            {/* Header */}
+            <div className="flex items-end justify-between">
+                <div>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.6rem', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.1 }}>
+                        Loan Products
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full" />
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Premium Eligibility Enabled</span>
-                    </div>
+                    <p style={{ color: 'var(--muted)', fontSize: '0.82rem', marginTop: 5 }}>
+                        {loans.length} financial instruments available — click any card to explore.
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 text-indigo-400">
-                    <Zap size={14} className="animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Instant Disbursal Ready</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                    style={{ background: 'var(--cream-dark)', border: '1px solid var(--border)', fontSize: '0.65rem', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--sage)' }} />
+                    Live market rates
                 </div>
             </div>
 
-            {/* Product Grid */}
-            <div className="grid md:grid-cols-2 gap-8">
-                {loans.map((loan, index) => (
-                    <motion.div
-                        key={loan.type}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="group bg-slate-900/40 border border-white/5 hover:border-indigo-500/30 rounded-3xl p-10 transition-all cursor-pointer relative overflow-hidden shadow-2xl"
-                    >
-                        {/* Background Branding */}
-                        <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 group-hover:scale-110 transition-transform">
-                            <PieChart size={120} className="text-white" />
-                        </div>
-
-                        <div className="relative z-10 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-8">
-                                <div className="space-y-1">
-                                    <div className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em]">Institutional Grade</div>
-                                    <h3 className="text-3xl font-black font-display text-white transition-colors group-hover:text-indigo-400">
-                                        {loan.type}
-                                    </h3>
+            {/* Grid */}
+            <div className="grid md:grid-cols-2 gap-5">
+                {loans.map((loan, index) => {
+                    const colors = typeColors[loan.type] || typeColors.Personal;
+                    const isSelected = selected === loan.type;
+                    return (
+                        <motion.div
+                            key={loan.type}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.08 }}
+                            onClick={() => setSelected(isSelected ? null : loan.type)}
+                            className="rounded-2xl p-6 cursor-pointer transition-all"
+                            style={{
+                                background: isSelected ? colors.bg : 'white',
+                                border: `1.5px solid ${isSelected ? colors.border : 'var(--border)'}`,
+                                boxShadow: isSelected ? `0 4px 20px rgba(0,0,0,0.06)` : '0 1px 3px rgba(0,0,0,0.04)',
+                                transform: isSelected ? 'translateY(-2px)' : 'none',
+                            }}
+                            onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.boxShadow = '0 3px 16px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; } }}
+                            onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = 'var(--border)'; } }}
+                        >
+                            <div className="flex items-start justify-between mb-5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                                        style={{ background: colors.bg, border: `1.5px solid ${colors.border}`, color: colors.dot }}>
+                                        {typeIcons[loan.type] || '◈'}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.1 }}>
+                                            {loan.type} Loan
+                                        </div>
+                                        <div style={{ fontSize: '0.68rem', color: 'var(--muted)', marginTop: 2 }}>{loan.description}</div>
+                                    </div>
                                 </div>
-                                <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all text-slate-500">
-                                    <ArrowUpRight size={20} />
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                                    style={{ background: isSelected ? colors.bg : 'var(--cream)', border: '1px solid var(--border)', color: 'var(--muted)' }}>
+                                    <ArrowUpRight className="w-3.5 h-3.5" style={{ transform: isSelected ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }} />
                                 </div>
                             </div>
 
-                            <p className="text-slate-400 text-sm font-medium leading-relaxed mb-10 max-w-[280px]">
-                                {loan.description}
-                            </p>
+                            {/* Stats row */}
+                            <div className="grid grid-cols-3 gap-3 mb-4">
+                                {[
+                                    { icon: Banknote, label: 'Max Amount', val: `₹${(loan.max_amount / 100000).toFixed(0)}L` },
+                                    { icon: TrendingUp, label: 'Interest p.a', val: `${loan.interest_rate}%` },
+                                    { icon: Clock, label: 'Tenure', val: `${loan.tenure_years} Yrs` },
+                                ].map(({ icon: Icon, label, val }) => (
+                                    <div key={label} className="text-center py-3 rounded-xl"
+                                        style={{ background: 'var(--cream)', border: '1px solid var(--border)' }}>
+                                        <div style={{ fontSize: '1rem', fontFamily: "'Playfair Display', serif", fontWeight: 700, color: 'var(--ink)', lineHeight: 1 }}>{val}</div>
+                                        <div style={{ fontSize: '0.58rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 3 }}>{label}</div>
+                                    </div>
+                                ))}
+                            </div>
 
-                            <div className="mt-auto grid grid-cols-2 gap-y-10 gap-x-6 border-t border-white/5 pt-10">
-                                <div className="space-y-1">
-                                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Banknote size={10} className="text-indigo-500" /> Capital Ceiling
-                                    </div>
-                                    <div className="text-xl font-bold text-white font-display">₹{(loan.max_amount / 100000).toFixed(1)}L</div>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                        <TrendingUp size={10} className="text-indigo-500" /> Annual Interest
-                                    </div>
-                                    <div className="text-xl font-bold text-white font-display">{loan.interest_rate}%</div>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Clock size={10} className="text-indigo-500" /> Max Tenure
-                                    </div>
-                                    <div className="text-xl font-bold text-white font-display">{loan.tenure_years} Years</div>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                        <UserCheck size={10} className="text-indigo-500" /> Entry Income
-                                    </div>
-                                    <div className="text-xl font-bold text-white font-display">₹{(loan.min_income / 1000).toFixed(0)}K</div>
+                            {/* Eligibility bar */}
+                            <div className="flex items-center justify-between"
+                                style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>
+                                <div className="flex items-center gap-3">
+                                    <span className="flex items-center gap-1">
+                                        <Users className="w-3 h-3" /> Age {loan.min_age}–{loan.max_age}
+                                    </span>
+                                    <span>· CIBIL {loan.min_cibil}+</span>
+                                    <span>· ₹{(loan.min_income / 1000).toFixed(0)}K/mo income</span>
                                 </div>
                             </div>
-                        </div>
-                    </motion.div>
-                ))}
+
+                            {/* Expanded perks */}
+                            {isSelected && perks[loan.type] && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="mt-4 pt-4 space-y-2"
+                                    style={{ borderTop: `1px solid ${colors.border}` }}>
+                                    {perks[loan.type].map((perk) => (
+                                        <div key={perk} className="flex items-center gap-2">
+                                            <CheckCircle className="w-3.5 h-3.5 shrink-0" style={{ color: colors.dot }} />
+                                            <span style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>{perk}</span>
+                                        </div>
+                                    ))}
+                                    <button className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+                                        style={{ background: 'var(--ink)', color: 'var(--cream)', fontSize: '0.78rem' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--ink-soft)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'var(--ink)'}
+                                        onClick={e => e.stopPropagation()}>
+                                        Apply Now
+                                    </button>
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    );
+                })}
             </div>
 
-            {/* Footer Trust */}
-            <div className="text-center py-10 opacity-30">
-                <div className="flex items-center justify-center gap-8 filter grayscale invert">
-                    <ShieldCheck className="w-12 h-12" />
-                    <Landmark className="w-12 h-12" />
-                    <ShieldCheck className="w-12 h-12" />
-                </div>
-                <p className="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-white">Institutional Grade Security Protocol</p>
+            {/* Footer */}
+            <div className="text-center pt-4 pb-2" style={{ borderTop: '1px solid var(--border)' }}>
+                <p style={{ fontSize: '0.65rem', color: 'var(--muted)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    All rates are indicative · Subject to RBI guidelines · T&C Apply
+                </p>
             </div>
         </div>
     );

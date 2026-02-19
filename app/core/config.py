@@ -12,8 +12,12 @@ class Settings(BaseSettings):
     
     # Path to the loan policies JSON file
     LOAN_POLICIES_FILE: str = os.path.join(BASE_DIR, "loan_policies.json")
-    
-    model_config = SettingsConfigDict(case_sensitive=True)
+
+    # Groq LLM — loaded from .env
+    GROQ_API_KEY: str
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=".env")
 
 settings = Settings()
 

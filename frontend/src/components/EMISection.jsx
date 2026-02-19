@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, IndianRupee, Percent, Calendar, Info, ArrowRight, Download, BarChart3 } from 'lucide-react';
+import { Calculator, IndianRupee, Percent, Calendar, ArrowRight, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { calculateEMI } from '../api';
+
+const Stat = ({ label, value, accent }) => (
+    <div className="px-5 py-4 rounded-xl" style={{ background: accent ? 'var(--ink)' : 'var(--cream-dark)', border: `1px solid ${accent ? 'transparent' : 'var(--border)'}` }}>
+        <div style={{ fontSize: '0.62rem', color: accent ? 'var(--amber-light)' : 'var(--muted)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 4 }}>{label}</div>
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: accent ? '1.6rem' : '1.1rem', fontWeight: 700, color: accent ? 'var(--cream)' : 'var(--ink)', lineHeight: 1 }}>{value}</div>
+    </div>
+);
+
+const SliderField = ({ label, icon: Icon, value, min, max, step, onChange, display, hint }) => (
+    <div className="space-y-3">
+        <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2" style={{ fontSize: '0.78rem', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600 }}>
+                <Icon className="w-3.5 h-3.5" style={{ color: 'var(--amber)' }} />
+                {label}
+            </label>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)' }}>
+                {display}
+            </span>
+        </div>
+        <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} className="w-full" />
+        <div className="flex justify-between" style={{ fontSize: '0.65rem', color: 'var(--muted)', fontFamily: "'DM Mono', monospace" }}>
+            {hint.map((h, i) => <span key={i}>{h}</span>)}
+        </div>
+    </div>
+);
 
 const EMISection = () => {
     const [principal, setPrincipal] = useState(500000);
@@ -9,176 +34,135 @@ const EMISection = () => {
     const [tenure, setTenure] = useState(5);
     const [result, setResult] = useState(null);
 
-    const fetchData = async () => {
-        try {
-            const data = await calculateEMI(principal, rate, tenure);
-            setResult(data);
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
     useEffect(() => {
-        fetchData();
+        calculateEMI(principal, rate, tenure).then(setResult).catch(console.error);
     }, [principal, rate, tenure]);
 
+    const principalPct = result ? Math.round((principal / result.total_payable) * 100) : 0;
+    const interestPct = 100 - principalPct;
+
     return (
-        <div className="grid lg:grid-cols-12 gap-8 h-full">
-            {/* Input Card */}
-            <div className="lg:col-span-7 space-y-6">
-                <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-8 shadow-2xl">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="p-3 bg-indigo-600/10 rounded-2xl">
-                            <BarChart3 className="text-indigo-400 w-6 h-6" />
+        <div className="grid lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
+
+            {/* Left — Controls */}
+            <div className="lg:col-span-3 space-y-5">
+                <div className="rounded-2xl p-6 space-y-7"
+                    style={{ background: 'white', border: '1px solid var(--border)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--ink)' }}>
+                            <Calculator className="w-4 h-4" style={{ color: 'var(--amber-light)' }} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-white">Loan Parameters</h3>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Adjust values to see real-time impact</p>
+                            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)' }}>Loan Parameters</div>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--muted)', letterSpacing: '0.08em' }}>Adjust values for real-time results</div>
                         </div>
                     </div>
 
-                    <div className="space-y-10">
-                        {/* Principal */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                                    <IndianRupee size={14} className="text-indigo-500" /> Principal Amount
-                                </label>
-                                <span className="text-lg font-black text-white font-display">₹ {principal.toLocaleString()}</span>
-                            </div>
-                            <input
-                                type="range" min="10000" max="10000000" step="50000"
-                                value={principal} onChange={(e) => setPrincipal(Number(e.target.value))}
-                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                            />
-                            <div className="flex justify-between text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
-                                <span>10K</span>
-                                <span>5M</span>
-                                <span>10M</span>
-                            </div>
-                        </div>
-
-                        {/* Rate */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                                    <Percent size={14} className="text-indigo-500" /> Interest Rate (p.a)
-                                </label>
-                                <span className="text-lg font-black text-white font-display">{rate}%</span>
-                            </div>
-                            <input
-                                type="range" min="5" max="25" step="0.1"
-                                value={rate} onChange={(e) => setRate(Number(e.target.value))}
-                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                            />
-                            <div className="flex justify-between text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
-                                <span>5%</span>
-                                <span>15%</span>
-                                <span>25%</span>
-                            </div>
-                        </div>
-
-                        {/* Tenure */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                                    <Calendar size={14} className="text-indigo-500" /> Tenure Groups
-                                </label>
-                                <span className="text-lg font-black text-white font-display">{tenure} Years</span>
-                            </div>
-                            <input
-                                type="range" min="1" max="30" step="1"
-                                value={tenure} onChange={(e) => setTenure(Number(e.target.value))}
-                                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                            />
-                            <div className="flex justify-between text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
-                                <span>1 Yr</span>
-                                <span>15 Yrs</span>
-                                <span>30 Yrs</span>
-                            </div>
-                        </div>
+                    <div className="space-y-8">
+                        <SliderField
+                            label="Principal Amount" icon={IndianRupee}
+                            value={principal} min={10000} max={10000000} step={50000}
+                            onChange={setPrincipal}
+                            display={`₹${principal.toLocaleString()}`}
+                            hint={['₹10K', '₹50L', '₹1Cr']}
+                        />
+                        <div style={{ height: 1, background: 'var(--border)' }} />
+                        <SliderField
+                            label="Interest Rate (p.a)" icon={Percent}
+                            value={rate} min={5} max={25} step={0.1}
+                            onChange={setRate}
+                            display={`${rate.toFixed(1)}%`}
+                            hint={['5%', '15%', '25%']}
+                        />
+                        <div style={{ height: 1, background: 'var(--border)' }} />
+                        <SliderField
+                            label="Tenure" icon={Calendar}
+                            value={tenure} min={1} max={30} step={1}
+                            onChange={setTenure}
+                            display={`${tenure} Years`}
+                            hint={['1 Yr', '15 Yrs', '30 Yrs']}
+                        />
                     </div>
                 </div>
 
-                <div className="p-6 bg-slate-900/20 border border-white/5 rounded-2xl flex items-start gap-4">
-                    <div className="p-2 bg-slate-800 rounded-lg">
-                        <Info className="text-slate-400 w-4 h-4" />
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                        Values are based on standard amortization formulas. Actual interest rates may vary based on your CIBIL profile and bank policies.
+                {/* Disclaimer */}
+                <div className="flex items-start gap-3 px-4 py-3 rounded-xl"
+                    style={{ background: 'var(--cream-dark)', border: '1px solid var(--border)' }}>
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--muted)' }} />
+                    <p style={{ fontSize: '0.72rem', color: 'var(--muted)', lineHeight: 1.6 }}>
+                        Calculations are based on standard reducing-balance amortization. Actual rates may vary based on your credit profile and lender policies.
                     </p>
                 </div>
             </div>
 
-            {/* Result Card */}
-            <div className="lg:col-span-5 relative space-y-6">
-                <div className="sticky top-0 space-y-6">
-                    <div className="overflow-hidden bg-slate-900 border border-white/10 rounded-3xl p-8 shadow-2xl relative">
-                        {/* Decorative Background */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/20 blur-[60px] rounded-full -mr-16 -mt-16" />
+            {/* Right — Results */}
+            <div className="lg:col-span-2 space-y-4">
+                <AnimatePresence mode="wait">
+                    {result ? (
+                        <motion.div key="result" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
 
-                        <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-8">
-                            <div className="p-4 bg-indigo-600 rounded-2xl shadow-2xl shadow-indigo-600/40">
-                                <Calculator className="text-white w-8 h-8" />
+                            {/* Main EMI Card */}
+                            <div className="rounded-2xl p-6 text-center"
+                                style={{ background: 'var(--ink)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div style={{ fontSize: '0.62rem', color: 'var(--amber-light)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, opacity: 0.7, marginBottom: 12 }}>
+                                    Monthly Installment
+                                </div>
+                                <div className="flex items-start justify-center gap-1 mb-2">
+                                    <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', color: 'var(--amber)', marginTop: 8, fontWeight: 600 }}>₹</span>
+                                    <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '3.2rem', fontWeight: 700, color: 'var(--cream)', lineHeight: 1 }}>
+                                        {result.emi.toLocaleString()}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.65rem', color: 'rgba(247,242,232,0.3)', letterSpacing: '0.1em' }}>
+                                    per month for {tenure} {tenure === 1 ? 'year' : 'years'}
+                                </div>
+
+                                {/* Simple bar */}
+                                <div className="mt-5 rounded-full overflow-hidden h-1.5 flex" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${principalPct}%` }}
+                                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                                        className="h-full rounded-l-full"
+                                        style={{ background: 'var(--amber)' }}
+                                    />
+                                    <div className="flex-1 h-full rounded-r-full" style={{ background: 'var(--rose)', opacity: 0.7 }} />
+                                </div>
+                                <div className="flex justify-between mt-2">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 rounded-full" style={{ background: 'var(--amber)' }} />
+                                        <span style={{ fontSize: '0.6rem', color: 'rgba(247,242,232,0.4)' }}>Principal {principalPct}%</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 rounded-full" style={{ background: 'var(--rose)', opacity: 0.7 }} />
+                                        <span style={{ fontSize: '0.6rem', color: 'rgba(247,242,232,0.4)' }}>Interest {interestPct}%</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <AnimatePresence mode="wait">
-                                {result ? (
-                                    <motion.div
-                                        key={result.emi}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="space-y-12 w-full"
-                                    >
-                                        <div className="space-y-2">
-                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Monthly Installment</div>
-                                            <div className="text-6xl font-black text-white tracking-tighter font-display">
-                                                <span className="text-indigo-500 text-3xl align-top mt-2 mr-1">₹</span>
-                                                {result.emi.toLocaleString()}
-                                            </div>
-                                        </div>
+                            {/* Stats */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <Stat label="Total Interest" value={`₹${Math.round(result.total_interest).toLocaleString()}`} />
+                                <Stat label="Total Payable" value={`₹${Math.round(result.total_payable).toLocaleString()}`} />
+                            </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-left">
-                                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Interest</div>
-                                                <div className="text-lg font-bold text-white font-display">₹{result.total_interest.toLocaleString()}</div>
-                                            </div>
-                                            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-right">
-                                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Payable</div>
-                                                <div className="text-lg font-bold text-white font-display">₹{result.total_payable.toLocaleString()}</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <button className="w-full py-4 bg-white text-slate-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors shadow-xl">
-                                                Proceed with Application <ArrowRight size={16} />
-                                            </button>
-                                            <button className="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-700 transition-colors">
-                                                <Download size={16} /> Export Amortization Table
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <div className="py-20 flex flex-col items-center gap-4">
-                                        <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Processing Parameters...</p>
-                                    </div>
-                                )}
-                            </AnimatePresence>
+                            {/* CTA */}
+                            <button className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-semibold transition-all"
+                                style={{ background: 'var(--amber)', color: 'white', fontSize: '0.82rem', letterSpacing: '0.04em' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--amber-dark)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'var(--amber)'}>
+                                Apply for This Loan <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </motion.div>
+                    ) : (
+                        <div className="rounded-2xl p-12 flex flex-col items-center justify-center gap-4"
+                            style={{ background: 'white', border: '1px solid var(--border)', minHeight: 300 }}>
+                            <div className="w-8 h-8 border-2 rounded-full animate-spin"
+                                style={{ borderColor: 'var(--cream-mid)', borderTopColor: 'var(--amber)' }} />
+                            <span style={{ fontSize: '0.72rem', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Computing…</span>
                         </div>
-                    </div>
-
-                    <div className="p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl text-white shadow-2xl relative overflow-hidden">
-                        <div className="relative z-10 space-y-4">
-                            <h4 className="font-bold text-lg">Preferential Rates?</h4>
-                            <p className="text-sm text-indigo-100 opacity-80 leading-relaxed font-medium">
-                                Premium users with CIBIL scores above 800 are eligible for an additional 0.5% interest reduction.
-                            </p>
-                            <button className="text-xs font-black uppercase tracking-widest underline underline-offset-4">Learn More</button>
-                        </div>
-                        <ShieldCheck className="absolute bottom-0 right-0 w-32 h-32 text-white/10 -mb-8 -mr-8" />
-                    </div>
-                </div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
