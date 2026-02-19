@@ -7,7 +7,8 @@ from app.api.routers import (
     loans_router,
     eligibility_router,
     emi_router,
-    chat_router
+    chat_router,
+    dna_router
 )
 from app.core.config import settings, logger
 import time
@@ -69,6 +70,7 @@ app.include_router(loans_router, prefix=f"{settings.API_V1_STR}/loans", tags=["L
 app.include_router(eligibility_router, prefix=f"{settings.API_V1_STR}/eligibility", tags=["Eligibility"])
 app.include_router(emi_router, prefix=f"{settings.API_V1_STR}/emi-calculator", tags=["EMI Calculator"])
 app.include_router(chat_router, prefix=f"{settings.API_V1_STR}/chat", tags=["Chatbot"])
+app.include_router(dna_router, prefix=f"{settings.API_V1_STR}/dna", tags=["Loan DNA"])
 
 
 if __name__ == "__main__":

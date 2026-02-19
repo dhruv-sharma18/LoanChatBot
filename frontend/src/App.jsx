@@ -4,6 +4,7 @@ import ChatSection from './components/ChatSection';
 import EMISection from './components/EMISection';
 import EligibilitySection from './components/EligibilitySection';
 import CatalogSection from './components/CatalogSection';
+import DnaSection from './components/DnaSection';
 
 function App() {
   const [activeTab, setActiveTab] = useState('chat');
@@ -12,6 +13,7 @@ function App() {
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
       <div className="h-full">
         {activeTab === 'chat' && <ChatSection />}
+        {activeTab === 'dna' && <DnaSection />}
         {activeTab === 'emi' && <EMISection />}
         {activeTab === 'eligibility' && <EligibilitySection />}
         {activeTab === 'catalog' && <CatalogSection />}

@@ -17,6 +17,7 @@ const Layout = ({ children, activeTab, setActiveTab }) => {
 
     const menuItems = [
         { id: 'chat', label: 'AI Assistant', icon: MessageSquare, tag: 'Live' },
+        { id: 'dna', label: 'Loan DNA', icon: Sparkles, tag: 'New' },
         { id: 'emi', label: 'EMI Calculator', icon: Calculator, tag: null },
         { id: 'eligibility', label: 'Eligibility Check', icon: ShieldCheck, tag: null },
         { id: 'catalog', label: 'Loan Products', icon: LayoutGrid, tag: null },

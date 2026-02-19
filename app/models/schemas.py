@@ -41,3 +41,27 @@ class ChatMessage(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     session_id: Optional[str] = None
+
+class DNAData(BaseModel):
+    income: float
+    expenses: float
+    existing_emi: float
+    cibil_score: int
+    savings: float
+    employment_status: str
+    goal: str
+
+class DNAInsight(BaseModel):
+    title: str
+    description: str
+    impact: str
+
+class DNANode(BaseModel):
+    type: str
+    intensity: float
+
+class DNAResponse(BaseModel):
+    scores: dict[str, int]
+    dna_sequence: list[DNANode]
+    insights: list[DNAInsight]
+    strategy: str

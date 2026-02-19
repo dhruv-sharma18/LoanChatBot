@@ -21,10 +21,12 @@ A production-ready FastAPI backend for a loan assistance service.
    ```bash
    pip install -r requirements.txt
    ```
-4. **Configure Loan Policies**:
+4. **Configure Environment Variables**:
+   - Copy `.env.example` to `.env` and fill in your Groq API key.
+5. **Configure Loan Policies**:
    - Loan types and eligibility criteria are managed in `loan_policies.json`.
    - Update interest rates or limits directly in this file without changing any code.
-5. **Run the Application**:
+6. **Run the Application**:
    ```bash
    uvicorn app.main:app --reload
    ```
@@ -85,3 +87,7 @@ curl -X POST http://localhost:8000/api/v1/chat \
   "message": "What are the home loan options?"
 }'
 ```
+
+---
+
+For detailed technical documentation, see [DOCUMENTATION.md](DOCUMENTATION.md).
