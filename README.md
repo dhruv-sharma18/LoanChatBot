@@ -7,6 +7,7 @@ A production-ready FastAPI backend for a loan assistance service.
 - **Eligibility Evaluation**: Automated check based on age, income, CIBIL, etc.
 - **EMI Calculator**: Standard financial formula implementation.
 - **Groq AI Chatbot**: Context-aware assistance powered by Llama 3 via Groq API.
+- **Loan DNA**: AI-powered financial fingerprinting and smart loan strategy using Anthropic Claude.
 - **Structured Logging & Error Handling**.
 
 ## Setup Instructions
@@ -22,7 +23,7 @@ A production-ready FastAPI backend for a loan assistance service.
    pip install -r requirements.txt
    ```
 4. **Configure Environment Variables**:
-   - Copy `.env.example` to `.env` and fill in your Groq API key.
+   - Copy `.env.example` to `.env` and fill in your **Groq** and **Anthropic** API keys.
 5. **Configure Loan Policies**:
    - Loan types and eligibility criteria are managed in `loan_policies.json`.
    - Update interest rates or limits directly in this file without changing any code.
@@ -47,6 +48,7 @@ pytest
 - **Eligibility**: `POST /api/v1/eligibility`
 - **EMI Calculator**: `POST /api/v1/emi-calculator`
 - **Chat**: `POST /api/v1/chat`
+- **Loan DNA**: `POST /api/v1/dna`
 
 ## Example Requests
 
@@ -85,6 +87,21 @@ curl -X POST http://localhost:8000/api/v1/chat \
 -H "Content-Type: application/json" \
 -d '{
   "message": "What are the home loan options?"
+}'
+```
+
+### Analyze Loan DNA
+```bash
+curl -X POST http://localhost:8000/api/v1/dna \
+-H "Content-Type: application/json" \
+-d '{
+  "income": 65000,
+  "expenses": 25000,
+  "existing_emi": 5000,
+  "cibil_score": 780,
+  "savings": 150000,
+  "employment_status": "Salaried",
+  "goal": "Buying a home"
 }'
 ```
 

@@ -1,7 +1,7 @@
 # LoanBot Pro — Project Documentation
 
 **Repository:** github.com/dhruv-sharma18/LoanChatBot  
-**Stack:** Python, FastAPI, Groq, Llama 3.3 70B, Pydantic, React, TailwindCSS
+**Stack:** Python, FastAPI, Groq (Llama 3.3), Anthropic (Claude 3.5), Pydantic, React, Framer Motion, TailwindCSS
 
 ---
 
@@ -9,7 +9,7 @@
 
 LoanBot Pro is a full-stack AI-powered loan assistance platform. You ask it questions about loan types, eligibility, or EMI calculations, and it answers from a curated knowledge base of loan policies — backed by a real LLM rather than a keyword matcher.
 
-It has four main features: a context-aware AI chatbot, a structured eligibility checker, an EMI calculator, and a loan catalog. The chatbot remembers your conversation within a session, so you can ask follow-up questions naturally without repeating context every time.
+It has five main features: a context-aware AI chatbot, a structured eligibility checker, an EMI calculator, a loan catalog, and the **Loan DNA** fingerprinting system. The chatbot remembers your conversation within a session, so you can ask follow-up questions naturally without repeating context every time.
 
 The original version was rule-based — it matched keywords like "home loan" or "interest rate" and returned templated responses. That approach is fragile and can't handle anything slightly off-script. Swapping it for a Groq-backed LLM with a loan-aware system prompt solved that entirely. The model now understands intent, handles rephrasing, and gives coherent multi-sentence answers instead of canned responses.
 
@@ -17,7 +17,7 @@ The original version was rule-based — it matched keywords like "home loan" or 
 
 ## Architecture
 
-The backend is a FastAPI application with four routers — chat, loans, eligibility, and EMI. The frontend is a React/TailwindCSS SPA that talks to the backend over a REST API.
+The backend is a FastAPI application with five primary routers — chat, loans, eligibility, EMI, and DNA. The frontend is a React/TailwindCSS SPA that talks to the backend over a REST API.
 
 The chat system works like this:
 
@@ -107,6 +107,7 @@ Implemented in `app/services/emi_service.py`. Returns monthly EMI, total payable
 | POST | `/api/v1/eligibility` | check eligibility for a loan type |
 | POST | `/api/v1/emi-calculator` | calculate EMI |
 | POST | `/api/v1/chat` | send a message to the chatbot |
+| POST | `/api/v1/dna` | generate a financial DNA profile |
 
 FastAPI generates interactive docs at `/docs`. Every endpoint can be tested there directly — no Postman needed.
 
@@ -168,6 +169,24 @@ FastAPI generates interactive docs at `/docs`. Every endpoint can be tested ther
 
 ---
 
+## Loan DNA
+
+The Loan DNA feature provides a "financial fingerprint" by analyzing a user's financial metrics and generating a visual profile paired with a smart loan strategy.
+
+**Anthropic Integration.** The implementation in `app/services/dna_service.py` uses the Claude 3.5 Sonnet model. It takes a detailed financial profile (income, expenses, EMI, CIBIL, savings, etc.) and returns a structured JSON containing:
+- **Scores**: A 0-100 rating for Spending, Savings, Credit, Stability, and Growth.
+- **DNA Sequence**: A list of nodes mapping to a double-helix visualization.
+- **Insights**: Three "deep insight" cards with descriptions and impact levels.
+- **Strategy**: A concise, AI-generated tactical loan advice.
+
+**Visualizations.** The frontend (`DnaSection.jsx`) uses two primary custom visualizations:
+1. **Radar Chart**: An SVG-based polar chart showing the balance between financial dimensions.
+2. **DNA Helix**: An animated SVG strand where the "nucleotides" pulse based on AI-generated intensity and type.
+
+---
+
+---
+
 ## File Breakdown
 
 ```
@@ -178,6 +197,7 @@ newLoanBot/
 │   │       ├── chat.py          # chat endpoint
 │   │       ├── eligibility.py   # eligibility endpoint
 │   │       ├── emi.py           # EMI calculator endpoint
+│   │       ├── dna.py           # Loan DNA endpoint (Anthropic)
 │   │       ├── loans.py         # loan catalog endpoint
 │   │       └── health.py        # health check
 │   ├── core/
@@ -186,12 +206,13 @@ newLoanBot/
 │   │   └── schemas.py           # Pydantic request/response models
 │   ├── services/
 │   │   ├── chat_service.py      # Groq integration, session history
+│   │   ├── dna_service.py       # Anthropic integration, financial sequencing
 │   │   ├── loan_service.py      # policy loading, eligibility logic
 │   │   └── emi_service.py       # EMI calculation
 │   └── main.py                  # app setup, middleware, router registration
 ├── frontend/
 │   └── src/
-│       ├── components/          # ChatSection, EMISection, EligibilitySection, etc.
+│       ├── components/          # Chat, DNA, EMI, Eligibility, Catalog, Layout
 │       ├── App.jsx
 │       └── main.jsx
 ├── tests/
@@ -241,6 +262,9 @@ Copy `.env.example` to `.env` and fill in your key:
 ```
 GROQ_API_KEY=your_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
+
+ANTHROPIC_API_KEY=your_key_here
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
 ```
 
 Start the backend:
