@@ -6,7 +6,7 @@ def test_chatbot_greeting():
 
 def test_chatbot_loan_types():
     response = get_chatbot_response("Tell me about types of loans")
-    assert "Personal, Home, Business, and Education" in response
+    assert "Personal, Home, Business, Education" in response
 
 def test_chatbot_empty_message():
     response = get_chatbot_response("")

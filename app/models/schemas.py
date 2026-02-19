@@ -7,6 +7,10 @@ class LoanInfo(BaseModel):
     max_amount: float
     interest_rate: float
     tenure_years: int
+    min_age: int
+    max_age: int
+    min_income: float
+    min_cibil: int
 
 class EligibilityRequest(BaseModel):
     age: int
